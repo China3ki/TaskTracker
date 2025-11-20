@@ -1,0 +1,19 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace TaskTracker.Entities;
+
+public partial class TaskComment
+{
+    public int CommentId { get; set; }
+
+    public string? CommentName { get; set; }
+
+    public int? CommentTaskId { get; set; }
+
+    public int? CommentUserId { get; set; }
+
+    public virtual Task? CommentTask { get; set; }
+
+    public virtual User? CommentUser { get; set; }
+}
