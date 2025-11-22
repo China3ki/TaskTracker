@@ -7,13 +7,13 @@ public partial class TaskComment
 {
     public int CommentId { get; set; }
 
-    public string? CommentName { get; set; }
+    public string CommentName { get; set; } = null!;
 
-    public int? CommentTaskId { get; set; }
+    public int CommentTaskId { get; set; }
 
-    public int? CommentUserId { get; set; }
+    public int CommentUserId { get; set; }
 
-    public virtual Task? CommentTask { get; set; }
+    public virtual Tasks CommentTask { get; set; } = null!;
 
-    public virtual User? CommentUser { get; set; }
+    public virtual User CommentUser { get; set; } = null!;
 }

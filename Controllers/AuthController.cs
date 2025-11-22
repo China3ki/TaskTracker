@@ -14,6 +14,7 @@ namespace TaskTracker.Controllers
         [HttpPost("register")]
         public async Task<ActionResult> Register([Required] RegisterDto user)
         {
+            if (!ModelState.IsValid) return BadRequest(new { message = "Data is not valid!" });
             logger.LogInformation("Register proccess");
             (bool Success, string Message) = await authServices.Register(user);
             if (Success) return Ok(new { message = Message });

@@ -18,7 +18,7 @@ builder.Services.AddOpenApi();
 var version = new MySqlServerVersion(new Version(10, 4, 32));
 
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddDbContext<TasktrackerContext>(option =>
 {
     option.UseMySql(builder.Configuration.GetConnectionString("Default"), version);
@@ -52,6 +52,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

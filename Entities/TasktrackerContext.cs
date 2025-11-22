@@ -18,7 +18,7 @@ public partial class TasktrackerContext : DbContext
 
     public virtual DbSet<AssignSubTask> AssignSubTasks { get; set; }
 
-    public virtual DbSet<Task> Tasks { get; set; }
+    public virtual DbSet<Tasks> Tasks { get; set; }
 
     public virtual DbSet<TaskComment> TaskComments { get; set; }
 
@@ -31,6 +31,7 @@ public partial class TasktrackerContext : DbContext
     public virtual DbSet<TasksSub> TasksSubs { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,14 +61,16 @@ public partial class TasktrackerContext : DbContext
 
             entity.HasOne(d => d.AssignSubTaskNavigation).WithMany(p => p.AssignSubTasks)
                 .HasForeignKey(d => d.AssignSubTaskId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_assign_sub_task_id");
 
             entity.HasOne(d => d.AssingUser).WithMany(p => p.AssignSubTasks)
                 .HasForeignKey(d => d.AssingUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_assign_user_id");
         });
 
-        modelBuilder.Entity<Task>(entity =>
+        modelBuilder.Entity<Tasks>(entity =>
         {
             entity.HasKey(e => e.TaskId).HasName("PRIMARY");
 
@@ -96,6 +99,7 @@ public partial class TasktrackerContext : DbContext
 
             entity.HasOne(d => d.TaskStatus).WithMany(p => p.Tasks)
                 .HasForeignKey(d => d.TaskStatusId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_task_status_id");
         });
 
@@ -124,10 +128,12 @@ public partial class TasktrackerContext : DbContext
 
             entity.HasOne(d => d.CommentTask).WithMany(p => p.TaskComments)
                 .HasForeignKey(d => d.CommentTaskId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_comment_task_id");
 
             entity.HasOne(d => d.CommentUser).WithMany(p => p.TaskComments)
                 .HasForeignKey(d => d.CommentUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_main_comment_user_id");
         });
 
@@ -170,10 +176,12 @@ public partial class TasktrackerContext : DbContext
 
             entity.HasOne(d => d.CommentSubTask).WithMany(p => p.TaskSubComments)
                 .HasForeignKey(d => d.CommentSubTaskId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_comment_sub_task_id");
 
             entity.HasOne(d => d.CommentUser).WithMany(p => p.TaskSubComments)
                 .HasForeignKey(d => d.CommentUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_comment_user_id");
         });
 
@@ -200,10 +208,12 @@ public partial class TasktrackerContext : DbContext
 
             entity.HasOne(d => d.Task).WithMany(p => p.TaskUsers)
                 .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_main_task_id");
 
             entity.HasOne(d => d.User).WithMany(p => p.TaskUsers)
                 .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_main_user_task");
         });
 
@@ -241,10 +251,12 @@ public partial class TasktrackerContext : DbContext
 
             entity.HasOne(d => d.Task).WithMany(p => p.TasksSubs)
                 .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_task_id");
 
             entity.HasOne(d => d.TaskStatus).WithMany(p => p.TasksSubs)
                 .HasForeignKey(d => d.TaskStatusId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_task_status");
         });
 

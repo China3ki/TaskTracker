@@ -3,23 +3,23 @@ using System.Collections.Generic;
 
 namespace TaskTracker.Entities;
 
-public partial class Task
+public partial class Tasks
 {
     public int TaskId { get; set; }
 
-    public string? TaskName { get; set; }
+    public string TaskName { get; set; } = null!;
 
     public string? TaskDescription { get; set; }
 
-    public DateTime? TaskStart { get; set; }
+    public DateTime TaskStart { get; set; }
 
     public DateTime? TaskEnd { get; set; }
 
-    public int? TaskStatusId { get; set; }
+    public int TaskStatusId { get; set; }
 
     public virtual ICollection<TaskComment> TaskComments { get; set; } = new List<TaskComment>();
 
-    public virtual TaskStatus? TaskStatus { get; set; }
+    public virtual TaskStatus TaskStatus { get; set; } = null!;
 
     public virtual ICollection<TaskUser> TaskUsers { get; set; } = new List<TaskUser>();
 
