@@ -2,7 +2,7 @@
 
 namespace TaskTracker.Dto
 {
-    public class TaskDto
+    public sealed class TaskDto
     {
         [Required]
         public string Name { get; set; } = string.Empty;

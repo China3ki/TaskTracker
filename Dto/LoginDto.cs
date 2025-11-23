@@ -2,7 +2,7 @@
 
 namespace TaskTracker.Dto
 {
-    public class LoginDto
+    public sealed class LoginDto
     {
         [Required]
         public string Email { get; set; } = string.Empty;
