@@ -13,7 +13,7 @@ public partial class TaskUser
 
     public bool TaskAdmin { get; set; }
 
-    public virtual Task Task { get; set; } = null!;
+    public virtual TaskMain Task { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;
 }

@@ -17,7 +17,7 @@ public partial class TaskTrackerContext : DbContext
 
     public virtual DbSet<AssignSubTask> AssignSubTasks { get; set; }
 
-    public virtual DbSet<Task> Tasks { get; set; }
+    public virtual DbSet<TaskMain> Tasks { get; set; }
 
     public virtual DbSet<TaskComment> TaskComments { get; set; }
 
@@ -31,9 +31,7 @@ public partial class TaskTrackerContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=127.0.0.1:5432;Username=postgres;Password=2004Pawel!;Database=taskTracker");
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,7 +56,7 @@ public partial class TaskTrackerContext : DbContext
                 .HasConstraintName("fk_assign_sub_user_id");
         });
 
-        modelBuilder.Entity<Task>(entity =>
+        modelBuilder.Entity<TaskMain>(entity =>
         {
             entity.HasKey(e => e.TaskId).HasName("tasks_pkey");
 
@@ -71,6 +69,9 @@ public partial class TaskTrackerContext : DbContext
             entity.Property(e => e.TaskEnd)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("task_end");
+            entity.Property(e => e.TaskName)
+                .HasMaxLength(50)
+                .HasColumnName("task_name");
             entity.Property(e => e.TaskStart)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("task_start");

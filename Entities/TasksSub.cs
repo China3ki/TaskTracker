@@ -19,7 +19,7 @@ public partial class TasksSub
 
     public virtual ICollection<AssignSubTask> AssignSubTasks { get; set; } = new List<AssignSubTask>();
 
-    public virtual Task Task { get; set; } = null!;
+    public virtual TaskMain Task { get; set; } = null!;
 
     public virtual TaskStatus TaskStatus { get; set; } = null!;
 

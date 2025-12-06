@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TaskTracker.Entities;
 
-public partial class Task
+public partial class TaskMain
 {
     public int TaskId { get; set; }
 
@@ -14,6 +14,8 @@ public partial class Task
     public DateTime? TaskEnd { get; set; }
 
     public int TaskStatusId { get; set; }
+
+    public string? TaskName { get; set; }
 
     public virtual ICollection<TaskComment> TaskComments { get; set; } = new List<TaskComment>();
 

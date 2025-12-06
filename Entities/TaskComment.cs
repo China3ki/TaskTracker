@@ -13,7 +13,7 @@ public partial class TaskComment
 
     public int CommentUserId { get; set; }
 
-    public virtual Task CommentTask { get; set; } = null!;
+    public virtual TaskMain CommentTask { get; set; } = null!;
 
     public virtual User CommentUser { get; set; } = null!;
 }

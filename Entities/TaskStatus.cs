@@ -9,7 +9,7 @@ public partial class TaskStatus
 
     public string StatusName { get; set; } = null!;
 
-    public virtual ICollection<Task> Tasks { get; set; } = new List<Task>();
+    public virtual ICollection<TaskMain> Tasks { get; set; } = new List<TaskMain>();
 
     public virtual ICollection<TasksSub> TasksSubs { get; set; } = new List<TasksSub>();
 }
