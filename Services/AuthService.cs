@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
@@ -10,7 +12,6 @@ using System.Threading.Tasks;
 using TaskTracker.Dto;
 using TaskTracker.Entities;
 using TaskTracker.Models;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TaskTracker.Services
 {
@@ -43,6 +44,12 @@ namespace TaskTracker.Services
             return (true, GenerateToken(user.UserId));
         }
 
+        static public (bool, int) CheckId(ControllerBase baseController)
+        {
+            int id = Convert.ToInt32(baseController.User.FindFirstValue("id"));
+            if (id == 0) return (false, 0);
+            else return (true, id);
+        }
         private string GenerateToken(int id)
         {
             var keyBytes = Encoding.UTF8.GetBytes(configuration["jwtSecret"] ?? throw new InvalidOperationException("Api key does not exist!"));
