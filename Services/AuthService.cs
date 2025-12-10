@@ -43,12 +43,13 @@ namespace TaskTracker.Services
             if (passwordEquality == PasswordVerificationResult.Failed) return (false, message);
             return (true, GenerateToken(user.UserId));
         }
-
-        static public (bool, int) CheckId(ControllerBase baseController)
+        public async Task<(bool, int)> CheckId(int taskId, ControllerBase baseController)
         {
             int id = Convert.ToInt32(baseController.User.FindFirstValue("id"));
             if (id == 0) return (false, 0);
-            else return (true, id);
+            bool isAdmin = await ctx.TaskUsers.AnyAsync(t => t.TaskId == taskId && t.UserId == id && t.TaskAdmin == true);
+            if (isAdmin) return (true, id);
+            else return (false, 0);
         }
         private string GenerateToken(int id)
         {
