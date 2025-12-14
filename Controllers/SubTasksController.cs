@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using TaskTracker.Dto;
 using TaskTracker.Entities;
 using TaskTracker.Services;
@@ -13,7 +14,7 @@ namespace TaskTracker.Controllers
     [ApiController]
     public class SubTasksController(TaskTrackerContext ctx, AuthService authService) : ControllerBase
     {
-        [HttpPost("subTask/add")]
+        [HttpPost]
         [Authorize]
         public async Task<ActionResult> AddSubTask([Required] int taskId, [Required] TaskDto task)
         {
@@ -32,7 +33,28 @@ namespace TaskTracker.Controllers
             await ctx.SaveChangesAsync();
             return Created();
         }
-        [HttpPost("subTask/assign")]
+        [HttpPost("comment")]
+        [Authorize]
+        public async Task<ActionResult> AddComment([Required] int subTaskId, [Required] CommentDto data)
+        {
+            int id = Convert.ToInt32(User.FindFirstValue("id"));
+            if(id == 0) return Unauthorized("You do not have a permission!");
+
+            bool userExist = await ctx.TaskUsers.AnyAsync(u => u.TaskId == data.TaskId && u.UserId == id);
+            if (!userExist) return BadRequest(new { message = "You do not have a permission!" });
+            bool subTaskExist = await ctx.TasksSubs.AnyAsync(t => t.SubTaskId == subTaskId);
+            if (!subTaskExist) return BadRequest(new { message = "Sub task does not exist!" });
+            TaskSubComment comment = new()
+            {
+                CommentName = data.Text,
+                CommentSubTaskId = subTaskId,
+                CommentUserId = id
+            };
+            ctx.Add<TaskSubComment>(comment);
+            await ctx.SaveChangesAsync();
+            return Created();
+        }
+        [HttpPost("assign")]
         [Authorize]
         public async Task<ActionResult> AssignUserToSubTask([Required] int taskId, [Required] int subTaskId, [Required] int userId)
         {
@@ -57,7 +79,7 @@ namespace TaskTracker.Controllers
             await ctx.SaveChangesAsync();
             return Created();
         }
-        [HttpDelete("subTask/unassign")]
+        [HttpDelete("assign")]
         [Authorize]
         public async Task<ActionResult> UnassignUser([Required] int taskId, [Required] int subTaskId, [Required] int userId)
         {
@@ -75,7 +97,7 @@ namespace TaskTracker.Controllers
             await ctx.SaveChangesAsync();
             return NoContent();
         }
-        [HttpDelete("subTask/delete")]
+        [HttpDelete]
         [Authorize]
         public async Task<ActionResult> DeleteSubTask([Required] int taskId, [Required] int subTaskid)
         {
@@ -86,8 +108,27 @@ namespace TaskTracker.Controllers
             if(subTask is null) return BadRequest(new { message = "Sub task does not exist!" });
 
             var assigned = await ctx.AssignSubTasks.Where(t => t.AssignSubTaskId == subTaskid).ToListAsync();
+            var comments = await ctx.TaskSubComments.Where(c => c.CommentSubTaskId == subTaskid).ToListAsync();
             if (assigned.Count > 0) ctx.AssignSubTasks.RemoveRange(assigned);
+            if (comments.Count > 0) ctx.TaskSubComments.RemoveRange(comments);
             ctx.Remove<TasksSub>(subTask);
+            await ctx.SaveChangesAsync();
+            return NoContent();
+        }
+        [HttpDelete("comments")]
+        [Authorize]
+        public async Task<ActionResult> DeleteComment([Required] int taskId, [Required] int commentId)
+        {
+            int id = Convert.ToInt32(User.FindFirstValue("id"));
+            if (id == 0) return Unauthorized("You do not have a permission!");
+
+            bool creator = await ctx.TaskSubComments.AnyAsync(c => c.CommentUserId == id);
+            bool admin = await ctx.TaskUsers.AnyAsync(c => c.TaskId == taskId && c.UserId == id && c.TaskAdmin == true);
+            if(!creator && !admin) return Unauthorized("You do not have a permission!");
+
+            var comment = await ctx.TaskSubComments.FirstOrDefaultAsync(c => c.CommentId == commentId);
+            if (comment is null) return BadRequest(new { message = "Comment does not exist!" });
+            ctx.Remove<TaskSubComment>(comment);
             await ctx.SaveChangesAsync();
             return NoContent();
         }

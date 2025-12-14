@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using TaskTracker.Dto;
 using TaskTracker.Entities;
 using TaskTracker.Services;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TaskTracker.Controllers
 {
@@ -15,7 +16,7 @@ namespace TaskTracker.Controllers
     [ApiController]
     public class TasksController(TaskTrackerContext ctx, AuthService authService) : ControllerBase
     {
-        [HttpGet("task/get")]
+        [HttpGet]
         [Authorize]
         public async Task<ActionResult<List<TaskMain>>> GetTasks()
         {
@@ -35,7 +36,27 @@ namespace TaskTracker.Controllers
             if (tasks.Count == 0) return BadRequest("You do not have any tasks!");
             else return Ok(tasks);
         }
-        [HttpPost("task/add")]
+        [HttpGet("{taskId}")]
+        [Authorize]
+        public async Task<ActionResult<TaskMain>> GetTask(int taskId)
+        {
+            int id = Convert.ToInt32(User.FindFirstValue("id"));
+            if (id == 0) return Unauthorized("You do not have a permission!");
+
+            var task = await ctx.TaskUsers.Select(t => new
+            {
+                t.TaskId,
+                t.Task.TaskName,
+                t.Task.TaskDescription,
+                t.Task.TaskStart,
+                t.Task.TaskEnd,
+                t.Task.TaskStatus.StatusName,
+                Users = t.Task.TaskUsers.Where(u => u.TaskId == t.TaskId).Select(u => new { u.User.UserId, u.User.UserName, u.User.UserSurname, u.TaskAdmin }).ToList()
+            }).FirstOrDefaultAsync(t => t.TaskId == taskId);
+            if (task is null) return BadRequest(new { message = "Task does not exist!" });
+            else return Ok(task);
+        }
+        [HttpPost]
         [Authorize]
         public async Task<ActionResult> AddTask(TaskDto data)
         {
@@ -58,7 +79,7 @@ namespace TaskTracker.Controllers
             await ctx.SaveChangesAsync();
             return Created();
         }
-        [HttpPost("user/add")]
+        [HttpPost("user")]
         [Authorize]
         public async Task<ActionResult> AddUser([Required] TaskUserDto data)
         {
@@ -81,7 +102,45 @@ namespace TaskTracker.Controllers
             await ctx.SaveChangesAsync();
             return Created();
         }
-        [HttpDelete("user/delete")]
+        [HttpPost("comments")]
+        [Authorize]
+        public async Task<ActionResult> AddComment([Required] CommentDto data)
+        {
+            int id = Convert.ToInt32(User.FindFirstValue("id"));
+            if(id == 0) return Unauthorized("You do not have a permission!");
+
+            bool userExist = await ctx.TaskUsers.AnyAsync(t => t.TaskId == data.TaskId && t.UserId == id);
+            if (!userExist) return BadRequest(new { message = "You do not have a permission!" });
+
+            TaskComment comment = new()
+            {
+                CommentName = data.Text,
+                CommentTaskId = data.TaskId,
+                CommentUserId = id
+            };
+            ctx.Add<TaskComment>(comment);
+            await ctx.SaveChangesAsync();
+            return Created();
+        }
+        [HttpDelete("comments")]
+        [Authorize]
+        public async Task<ActionResult> DeleteComment([Required] int TaskId, [Required] int commentId)
+        {
+            int id = Convert.ToInt32(User.FindFirstValue("id"));
+            if (id == 0) return Unauthorized("You do not have a permission!");
+
+            bool admin = await ctx.TaskUsers.AnyAsync(u => u.TaskId == TaskId && u.UserId == id && u.TaskAdmin == true);
+            bool creator = await ctx.TaskComments.AnyAsync(c => c.CommentId == commentId);
+            if (!creator && !admin) return Unauthorized("You do not have a permission!");
+
+            var comment = await ctx.TaskComments.FirstOrDefaultAsync(c => c.CommentId == commentId);
+            if (comment is null) return BadRequest(new { message = "Comment does not exist!" });
+
+            ctx.Remove<TaskComment>(comment);
+            await ctx.SaveChangesAsync();
+            return NoContent();
+        }
+        [HttpDelete("user")]
         [Authorize]
         public async Task<ActionResult> DeleteUser([Required] int taskId, [Required] int userId)
         {
@@ -95,7 +154,7 @@ namespace TaskTracker.Controllers
             await ctx.SaveChangesAsync();
             return NoContent();
         }
-        [HttpDelete("task/delete")]
+        [HttpDelete("{taskId}")]
         [Authorize]
         public async Task<ActionResult> DeleteTask([Required] int taskId)
         {
@@ -105,12 +164,14 @@ namespace TaskTracker.Controllers
             var task = await ctx.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
             if (task is null) return BadRequest(new { message = "Task does not exist!" });
             var taskUsers = await ctx.TaskUsers.Where(t => t.TaskId == taskId).ToListAsync();
-            ctx.TaskUsers.RemoveRange(taskUsers);
+            var comments = await ctx.TaskComments.Where(t => t.CommentTaskId == taskId).ToListAsync();
+            if (taskUsers.Count > 0) ctx.TaskUsers.RemoveRange(taskUsers);
+            if (comments.Count > 0 ) ctx.TaskComments.RemoveRange(comments);
             ctx.Remove<TaskMain>(task);
             await ctx.SaveChangesAsync();
             return NoContent();
         }
-        [HttpDelete("task/leave")]
+        [HttpDelete("/leave/{taskId}")]
         [Authorize]
         public async Task<ActionResult> LeaveTask([Required] int taskId)
         {
@@ -134,7 +195,7 @@ namespace TaskTracker.Controllers
             await ctx.SaveChangesAsync();
             return NoContent();
         }
-        [HttpPut("task/edit")]
+        [HttpPut]
         [Authorize]
         public async Task<ActionResult> EditTask([Required] int taskId, [Required] EditTaskDto task)
         {
@@ -150,7 +211,7 @@ namespace TaskTracker.Controllers
             await ctx.SaveChangesAsync();
             return NoContent();
         }
-        [HttpPut("user/edit")]
+        [HttpPut("user")]
         [Authorize]
         public async Task<ActionResult> EditUser([Required]int taskId, [Required] int userId, [Required] bool admin)
         {
