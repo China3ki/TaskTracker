@@ -165,8 +165,12 @@ namespace TaskTracker.Controllers
             if (task is null) return BadRequest(new { message = "Task does not exist!" });
             var taskUsers = await ctx.TaskUsers.Where(t => t.TaskId == taskId).ToListAsync();
             var comments = await ctx.TaskComments.Where(t => t.CommentTaskId == taskId).ToListAsync();
+            var subTasks = await ctx.TasksSubs.Where(t => t.TaskId == taskId).ToListAsync();
+            var subComments = await ctx.TaskSubComments.Where(t => t.CommentSubTask.TaskId == taskId).ToListAsync();
             if (taskUsers.Count > 0) ctx.TaskUsers.RemoveRange(taskUsers);
             if (comments.Count > 0 ) ctx.TaskComments.RemoveRange(comments);
+            if (subTasks.Count > 0) ctx.TasksSubs.RemoveRange(subTasks);
+            if (subComments.Count > 0) ctx.TaskSubComments.RemoveRange(subComments);
             ctx.Remove<TaskMain>(task);
             await ctx.SaveChangesAsync();
             return NoContent();

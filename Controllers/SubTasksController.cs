@@ -14,6 +14,16 @@ namespace TaskTracker.Controllers
     [ApiController]
     public class SubTasksController(TaskTrackerContext ctx, AuthService authService) : ControllerBase
     {
+        [HttpGet("{taskId}")]
+        [Authorize]
+        public async Task<ActionResult<List<AssignSubTask>>> GetSubTasks([Required] int taskId)
+        {
+            int id = Convert.ToInt32(User.FindFirstValue("id"));
+            if (id == 0) return Unauthorized("You do not have a permission!");
+            var subTasks = await ctx.AssignSubTasks.Where(t => t.AssignSubTaskId == taskId && t.AssignUserId == id).Select(t => new { t.AssignSubTaskId }).ToListAsync();
+            if (subTasks.Count == 0) return BadRequest(new { message = "You do not have any sub tasks!" });
+            else return Ok(subTasks);
+        }
         [HttpPost]
         [Authorize]
         public async Task<ActionResult> AddSubTask([Required] int taskId, [Required] TaskDto task)
@@ -25,6 +35,7 @@ namespace TaskTracker.Controllers
             {
                 TaskId = taskId,
                 TaskName = task.Name,
+                TaskDescription = task.Description,
                 TaskStart = task.Start ?? DateTime.Now,
                 TaskEnd = task.End,
                 TaskStatusId = 1

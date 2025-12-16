@@ -17,6 +17,8 @@ public partial class TasksSub
 
     public int TaskStatusId { get; set; }
 
+    public string? TaskDescription { get; set; }
+
     public virtual ICollection<AssignSubTask> AssignSubTasks { get; set; } = new List<AssignSubTask>();
 
     public virtual TaskMain Task { get; set; } = null!;

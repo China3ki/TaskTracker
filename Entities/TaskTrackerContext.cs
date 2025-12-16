@@ -178,6 +178,7 @@ public partial class TaskTrackerContext : DbContext
             entity.Property(e => e.SubTaskId)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("sub_task_id");
+            entity.Property(e => e.TaskDescription).HasColumnName("task_description");
             entity.Property(e => e.TaskEnd)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("task_end");

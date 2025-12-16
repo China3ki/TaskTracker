@@ -15,7 +15,7 @@ public partial class TaskMain
 
     public int TaskStatusId { get; set; }
 
-    public string? TaskName { get; set; }
+    public string TaskName { get; set; } = null!;
 
     public virtual ICollection<TaskComment> TaskComments { get; set; } = new List<TaskComment>();
 
