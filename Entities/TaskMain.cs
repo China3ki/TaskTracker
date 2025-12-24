@@ -24,4 +24,6 @@ public partial class TaskMain
     public virtual ICollection<TaskUser> TaskUsers { get; set; } = new List<TaskUser>();
 
     public virtual ICollection<TasksSub> TasksSubs { get; set; } = new List<TasksSub>();
+
+    public virtual ICollection<UsersInvitation> UsersInvitations { get; set; } = new List<UsersInvitation>();
 }

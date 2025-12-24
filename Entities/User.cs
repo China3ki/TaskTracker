@@ -22,4 +22,8 @@ public partial class User
     public virtual ICollection<TaskSubComment> TaskSubComments { get; set; } = new List<TaskSubComment>();
 
     public virtual ICollection<TaskUser> TaskUsers { get; set; } = new List<TaskUser>();
+
+    public virtual ICollection<UsersInvitation> UsersInvitationInvitedUsers { get; set; } = new List<UsersInvitation>();
+
+    public virtual ICollection<UsersInvitation> UsersInvitationUsers { get; set; } = new List<UsersInvitation>();
 }

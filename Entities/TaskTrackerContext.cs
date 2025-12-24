@@ -31,6 +31,8 @@ public partial class TaskTrackerContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<UsersInvitation> UsersInvitations { get; set; }
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -221,6 +223,36 @@ public partial class TaskTrackerContext : DbContext
             entity.Property(e => e.UserSurname)
                 .HasMaxLength(100)
                 .HasColumnName("user_surname");
+        });
+
+        modelBuilder.Entity<UsersInvitation>(entity =>
+        {
+            entity.HasKey(e => e.InvitationId).HasName("users_invitation_pkey");
+
+            entity.ToTable("users_invitation");
+
+            entity.Property(e => e.InvitationId)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("invitation_id");
+            entity.Property(e => e.InvitedUserId).HasColumnName("invited_user_id");
+            entity.Property(e => e.TaskAdmin).HasColumnName("task_admin");
+            entity.Property(e => e.TaskId).HasColumnName("task_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.InvitedUser).WithMany(p => p.UsersInvitationInvitedUsers)
+                .HasForeignKey(d => d.InvitedUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_invited_user");
+
+            entity.HasOne(d => d.Task).WithMany(p => p.UsersInvitations)
+                .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_invited_task");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UsersInvitationUsers)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_invited_userid");
         });
 
         OnModelCreatingPartial(modelBuilder);

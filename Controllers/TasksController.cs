@@ -21,7 +21,7 @@ namespace TaskTracker.Controllers
         public async Task<ActionResult<List<TaskMain>>> GetTasks()
         {
             int id = Convert.ToInt32(User.FindFirstValue("id"));
-            if (id == 0) return Unauthorized("You do not have a permission!");
+            if (id == 0) return Unauthorized(new { message = "You do not have a permission!" });
 
             var tasks = await ctx.TaskUsers.Where(u => u.UserId == id).Select(t => new
             {
@@ -31,9 +31,9 @@ namespace TaskTracker.Controllers
                 t.Task.TaskStart,
                 t.Task.TaskEnd,
                 t.Task.TaskStatus.StatusName,
-                Users = t.Task.TaskUsers.Where(u => u.TaskId == t.TaskId).Select(u => new {u.User.UserId, u.User.UserName, u.User.UserSurname, u.TaskAdmin }).ToList()
+                Users = t.Task.TaskUsers.Where(u => u.TaskId == t.TaskId).Select(u => new { u.User.UserId, u.User.UserName, u.User.UserSurname, u.TaskAdmin }).ToList()
             }).ToListAsync();
-            if (tasks.Count == 0) return BadRequest("You do not have any tasks!");
+            if (tasks.Count == 0) return NoContent();
             else return Ok(tasks);
         }
         [HttpGet("{taskId}")]
@@ -41,7 +41,7 @@ namespace TaskTracker.Controllers
         public async Task<ActionResult<TaskMain>> GetTask(int taskId)
         {
             int id = Convert.ToInt32(User.FindFirstValue("id"));
-            if (id == 0) return Unauthorized("You do not have a permission!");
+            if (id == 0) return Unauthorized(new { message = "You do not have a permission!" });
 
             var task = await ctx.TaskUsers.Select(t => new
             {
@@ -53,7 +53,7 @@ namespace TaskTracker.Controllers
                 t.Task.TaskStatus.StatusName,
                 Users = t.Task.TaskUsers.Where(u => u.TaskId == t.TaskId).Select(u => new { u.User.UserId, u.User.UserName, u.User.UserSurname, u.TaskAdmin }).ToList()
             }).FirstOrDefaultAsync(t => t.TaskId == taskId);
-            if (task is null) return BadRequest(new { message = "Task does not exist!" });
+            if (task is null) return NoContent();
             else return Ok(task);
         }
         [HttpPost]
@@ -61,7 +61,7 @@ namespace TaskTracker.Controllers
         public async Task<ActionResult> AddTask(TaskDto data)
         {
             int id = Convert.ToInt32(User.FindFirstValue("id"));
-            if (id == 0) return Unauthorized("You do not have a permission!");
+            if (id == 0) return Unauthorized(new { message = "You do not have a permission!" });
 
             TaskMain task = new()
             {
@@ -79,35 +79,12 @@ namespace TaskTracker.Controllers
             await ctx.SaveChangesAsync();
             return Created();
         }
-        [HttpPost("user")]
-        [Authorize]
-        public async Task<ActionResult> AddUser([Required] TaskUserDto data)
-        {
-            (bool isAdminAndIdExist, int id) = await authService.CheckId(data.TaskId, this);
-            if (!isAdminAndIdExist) return Unauthorized("You do not have a permission!");
-
-            bool userExistInTheTask = await ctx.TaskUsers.AnyAsync(t => t.TaskId == data.TaskId && t.UserId == data.UserId);
-            if (userExistInTheTask) return BadRequest(new { message = "User is already in the task!" });
- 
-            bool userExist = await ctx.Users.AnyAsync(u => u.UserId == data.UserId);
-            if (!userExist) return BadRequest(new { message = "User does not exist!" });
-
-            TaskUser taskUser = new()
-            {
-                TaskId = data.TaskId,
-                UserId = data.UserId,
-                TaskAdmin = data.Admin,
-            };
-            ctx.Add<TaskUser>(taskUser);
-            await ctx.SaveChangesAsync();
-            return Created();
-        }
         [HttpPost("comments")]
         [Authorize]
         public async Task<ActionResult> AddComment([Required] CommentDto data)
         {
             int id = Convert.ToInt32(User.FindFirstValue("id"));
-            if(id == 0) return Unauthorized("You do not have a permission!");
+            if (id == 0) return Unauthorized(new { message = "You do not have a permission!" });
 
             bool userExist = await ctx.TaskUsers.AnyAsync(t => t.TaskId == data.TaskId && t.UserId == id);
             if (!userExist) return BadRequest(new { message = "You do not have a permission!" });
@@ -127,7 +104,7 @@ namespace TaskTracker.Controllers
         public async Task<ActionResult> DeleteComment([Required] int TaskId, [Required] int commentId)
         {
             int id = Convert.ToInt32(User.FindFirstValue("id"));
-            if (id == 0) return Unauthorized("You do not have a permission!");
+            if (id == 0) return Unauthorized(new { message = "You do not have a permission!" });
 
             bool admin = await ctx.TaskUsers.AnyAsync(u => u.TaskId == TaskId && u.UserId == id && u.TaskAdmin == true);
             bool creator = await ctx.TaskComments.AnyAsync(c => c.CommentId == commentId);
@@ -145,7 +122,7 @@ namespace TaskTracker.Controllers
         public async Task<ActionResult> DeleteUser([Required] int taskId, [Required] int userId)
         {
             (bool isAdminAndIdExist, int id) = await authService.CheckId(taskId, this);
-            if (!isAdminAndIdExist) return Unauthorized("You do not have a permission!");
+            if (!isAdminAndIdExist) return Unauthorized(new { message = "You do not have a permission!" });
 
             var user = await ctx.TaskUsers.FirstOrDefaultAsync(u => u.TaskId == taskId && u.UserId == userId);
             if (user is null) return BadRequest(new { message = "User does not exist in this task!" });
@@ -159,7 +136,7 @@ namespace TaskTracker.Controllers
         public async Task<ActionResult> DeleteTask([Required] int taskId)
         {
             (bool isAdminAndIdExist, int id) = await authService.CheckId(taskId, this);
-            if (!isAdminAndIdExist) return Unauthorized("You do not have a permission!");
+            if (!isAdminAndIdExist) return Unauthorized(new { message = "You do not have a permission!" });
 
             var task = await ctx.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
             if (task is null) return BadRequest(new { message = "Task does not exist!" });
@@ -168,7 +145,7 @@ namespace TaskTracker.Controllers
             var subTasks = await ctx.TasksSubs.Where(t => t.TaskId == taskId).ToListAsync();
             var subComments = await ctx.TaskSubComments.Where(t => t.CommentSubTask.TaskId == taskId).ToListAsync();
             if (taskUsers.Count > 0) ctx.TaskUsers.RemoveRange(taskUsers);
-            if (comments.Count > 0 ) ctx.TaskComments.RemoveRange(comments);
+            if (comments.Count > 0) ctx.TaskComments.RemoveRange(comments);
             if (subTasks.Count > 0) ctx.TasksSubs.RemoveRange(subTasks);
             if (subComments.Count > 0) ctx.TaskSubComments.RemoveRange(subComments);
             ctx.Remove<TaskMain>(task);
@@ -180,14 +157,14 @@ namespace TaskTracker.Controllers
         public async Task<ActionResult> LeaveTask([Required] int taskId)
         {
             int id = Convert.ToInt32(User.FindFirstValue("id"));
-            if (id == 0) return Unauthorized("You do not have a permission!");
+            if (id == 0) return Unauthorized(new { message = "You do not have a permission!" });
 
             var countTaskUser = await ctx.TaskUsers.CountAsync(u => u.TaskId == taskId);
             bool userExist = await ctx.TaskUsers.AnyAsync(u => u.TaskId == taskId && u.UserId == id);
             bool admin = await ctx.TaskUsers.AnyAsync(u => u.TaskId == taskId && u.UserId != id && u.TaskAdmin == true);
             if (!userExist) return BadRequest(new { message = "You are not already in this task!" });
             if (!admin && countTaskUser > 1) return BadRequest(new { message = "You have to give someone admin permission before leave!" });
-            else if(countTaskUser == 1)
+            else if (countTaskUser == 1)
             {
                 var task = await ctx.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
                 if (task is null) return BadRequest(new { message = "Task already not exist!" });
@@ -204,7 +181,7 @@ namespace TaskTracker.Controllers
         public async Task<ActionResult> EditTask([Required] int taskId, [Required] EditTaskDto task)
         {
             (bool isAdminAndIdExist, int id) = await authService.CheckId(taskId, this);
-            if (!isAdminAndIdExist) return Unauthorized("You do not have a permission!");
+            if (!isAdminAndIdExist) return Unauthorized(new { message = "You do not have a permission!" });
 
             var editedTask = await ctx.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
             if (editedTask is null) return BadRequest(new { message = "Task does not exist!" });
@@ -217,10 +194,10 @@ namespace TaskTracker.Controllers
         }
         [HttpPut("user")]
         [Authorize]
-        public async Task<ActionResult> EditUser([Required]int taskId, [Required] int userId, [Required] bool admin)
+        public async Task<ActionResult> EditUser([Required] int taskId, [Required] int userId, [Required] bool admin)
         {
             (bool isAdminAndIdExist, int id) = await authService.CheckId(taskId, this);
-            if (!isAdminAndIdExist) return Unauthorized("You do not have a permission!");
+            if (!isAdminAndIdExist) return Unauthorized(new { message = "You do not have a permission!" });
 
             if (userId == id)
             {
